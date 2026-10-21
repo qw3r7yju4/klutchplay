@@ -403,8 +403,11 @@
       const form = document.getElementById('contactForm');
       const submitBtn = document.getElementById('submitFormBtn');
       const successBox = document.getElementById('contactFormSuccess');
+      const errorBox = document.getElementById('contactFormError');
 
       if (!form || !submitBtn) return;
+      if (successBox) successBox.style.display = 'none';
+      if (errorBox) errorBox.style.display = 'none';
 
       const clientName = document.getElementById('clientName')?.value || '';
       const clientEmail = document.getElementById('clientEmail')?.value || '';
@@ -436,17 +439,20 @@
         if (!response.ok) {
           throw new Error(`Server returned ${response.status}`);
         }
-      } catch (err) {
-        console.warn('API endpoint unavailable or running in static preview mode, demonstrating success state:', err);
-      } finally {
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
         form.reset();
-
         if (successBox) {
           successBox.style.display = 'block';
           successBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+      } catch (err) {
+        console.error('Unable to send contact inquiry:', err);
+        if (errorBox) {
+          errorBox.style.display = 'block';
+          errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
       }
     }
   };

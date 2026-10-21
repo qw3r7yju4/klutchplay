@@ -55,31 +55,26 @@ export default {
           `Sent via Klutchplay Cloudflare Worker backend`,
         ].join('\n');
 
-        // Send email via Cloudflare send_email binding if available
-        if (env.EMAIL && typeof env.EMAIL.send === 'function') {
-          try {
-            const rawMessage = [
-              `From: "Klutchplay Quotes" <${env.SENDER_EMAIL || 'website-quotes@klutchplay.com'}>`,
-              `To: <${env.FORWARD_TO_EMAIL || 'klucinaken@gmail.com'}>`,
-              `Reply-To: <${email}>`,
-              `Subject: ${subject}`,
-              `Content-Type: text/plain; charset=utf-8`,
-              ``,
-              emailContent,
-            ].join('\r\n');
-
-            const message = new EmailMessage(
-              env.SENDER_EMAIL || 'website-quotes@klutchplay.com',
-              env.FORWARD_TO_EMAIL || 'klucinaken@gmail.com',
-              rawMessage
-            );
-
-            await env.EMAIL.send(message);
-          } catch (emailErr) {
-            console.error('Email send warning:', emailErr);
-            // Non-fatal: still return success to the user with logged error
-          }
+        if (!env.EMAIL || typeof env.EMAIL.send !== 'function') {
+          throw new Error('Email service is not configured');
         }
+        if (!env.FORWARD_TO_EMAIL) {
+          throw new Error('Forwarding address is not configured');
+        }
+
+        const sender = env.SENDER_EMAIL || 'website-quotes@klutchplay.com';
+        const rawMessage = [
+          `From: "Klutchplay Quotes" <${sender}>`,
+          `To: <${env.FORWARD_TO_EMAIL}>`,
+          `Reply-To: <${email}>`,
+          `Subject: ${subject}`,
+          `Content-Type: text/plain; charset=utf-8`,
+          ``,
+          emailContent,
+        ].join('\r\n');
+
+        const message = new EmailMessage(sender, env.FORWARD_TO_EMAIL, rawMessage);
+        await env.EMAIL.send(message);
 
         return new Response(
           JSON.stringify({

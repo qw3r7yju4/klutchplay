@@ -18,7 +18,6 @@
   "send_email": [{ "name": "EMAIL" }],
 
   "vars": {
-    "FORWARD_TO_EMAIL": "klucinaken@gmail.com",
     "SENDER_EMAIL": "website-quotes@klutchplay.com",
     "PUBLIC_SITE_URL": "https://www.klutchplay.com"
   }
