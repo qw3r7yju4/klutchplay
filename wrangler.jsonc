@@ -1,0 +1,25 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "klutchplay",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-10-21",
+  "observability": { "enabled": true },
+
+  // Static files in ./assets/ are served automatically.
+  // The Worker only runs for /api/* paths.
+  "assets": {
+    "directory": "./assets",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Email binding — ready for when you code it
+  "send_email": [{ "name": "EMAIL" }],
+
+  "vars": {
+    "FORWARD_TO_EMAIL": "klucinaken@gmail.com",
+    "SENDER_EMAIL": "website-quotes@klutchplay.com",
+    "PUBLIC_SITE_URL": "https://www.klutchplay.com"
+  }
+}
