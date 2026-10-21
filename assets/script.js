@@ -53,86 +53,268 @@
     });
   }
 
-  // --- Interactive Store & Cart Simulation ---
+  // --- Interactive Store & Cart Simulation State ---
+  const selectedVariants = {
+    'velocity-pro': 'Cyber Cyan',
+    'apex-keyset': 'Linear Speed Red',
+    'capture-hub': 'USB-C 3.2 Gen 2',
+    'desk-mat': 'XL (900x400mm)'
+  };
+
   const cartState = {
     items: [
-      { id: 1, name: 'Custom Storefront Theme', price: 299, qty: 1 }
-    ]
+      { id: 'velocity-pro', name: 'Klutch Velocity Pro Kit', price: 89, qty: 1, variant: 'Cyber Cyan' }
+    ],
+    discountPercent: 0,
+    appliedCoupon: null,
+    payMethod: 'card'
   };
+
+  function showDemoToast(msg) {
+    const toast = document.getElementById('demoStoreToast');
+    const toastMsg = document.getElementById('demoStoreToastMsg');
+    if (!toast || !toastMsg) return;
+    toastMsg.textContent = msg;
+    toast.style.display = 'flex';
+    clearTimeout(window._toastTimer);
+    window._toastTimer = setTimeout(() => {
+      toast.style.display = 'none';
+    }, 3200);
+  }
 
   function updateCartUI() {
     const listEl = document.getElementById('cartItemList');
     const countEl = document.getElementById('cartCount');
+    const subtotalEl = document.getElementById('cartSubtotalDisplay');
+    const discountEl = document.getElementById('cartDiscountDisplay');
+    const discountRow = document.getElementById('discountRow');
     const totalEl = document.getElementById('cartTotalDisplay');
     const simPayAmount = document.getElementById('simPayAmount');
+    const shippingProgressFill = document.getElementById('shippingProgressBarFill');
+    const shippingProgressPercent = document.getElementById('shippingProgressPercent');
+    const shippingProgressMsg = document.getElementById('shippingProgressMsg');
 
     if (!listEl) return;
 
     listEl.innerHTML = '';
-    let total = 0;
+    let subtotal = 0;
     let count = 0;
 
     if (cartState.items.length === 0) {
-      listEl.innerHTML = '<li class="cart-item-row" style="color: var(--text-dim); justify-content: center;">Your cart is empty. Click + Add above!</li>';
+      listEl.innerHTML = '<li class="cart-empty-message"><i class="fa-solid fa-cart-arrow-down"></i> Your cart is empty. Click "+ Add" on any gear above!</li>';
     } else {
       cartState.items.forEach((item, index) => {
-        total += item.price * item.qty;
+        subtotal += item.price * item.qty;
         count += item.qty;
 
         const li = document.createElement('li');
         li.className = 'cart-item-row';
         li.innerHTML = `
-          <span>${item.qty}x ${item.name}</span>
-          <span>$${(item.price * item.qty).toFixed(2)}</span>
+          <div class="cart-item-details">
+            <span class="cart-item-title">${item.name}</span>
+            <span class="cart-item-variant">${item.variant || 'Standard'}</span>
+          </div>
+          <div class="cart-item-controls">
+            <button type="button" class="btn-qty" onclick="window.KlutchDemo.updateQuantity(${index}, -1)" aria-label="Decrease">&minus;</button>
+            <span class="cart-item-qty">${item.qty}</span>
+            <button type="button" class="btn-qty" onclick="window.KlutchDemo.updateQuantity(${index}, 1)" aria-label="Increase">&plus;</button>
+          </div>
+          <span class="cart-item-subtotal">$${(item.price * item.qty).toFixed(2)}</span>
+          <button type="button" class="btn-item-remove" onclick="window.KlutchDemo.removeItem(${index})" title="Remove item">&times;</button>
         `;
         listEl.appendChild(li);
       });
     }
 
+    let discountAmount = 0;
+    if (cartState.discountPercent > 0 && subtotal > 0) {
+      discountAmount = (subtotal * cartState.discountPercent) / 100;
+      if (discountRow) discountRow.style.display = 'flex';
+      if (discountEl) discountEl.textContent = `-$${discountAmount.toFixed(2)}`;
+    } else {
+      if (discountRow) discountRow.style.display = 'none';
+    }
+
+    const finalTotal = Math.max(0, subtotal - discountAmount);
+
+    const shippingThreshold = 150;
+    const progressPercent = Math.min(100, Math.round((subtotal / shippingThreshold) * 100));
+    if (shippingProgressFill) shippingProgressFill.style.width = `${progressPercent}%`;
+    if (shippingProgressPercent) shippingProgressPercent.textContent = `${progressPercent}%`;
+
+    if (shippingProgressMsg) {
+      if (subtotal >= shippingThreshold) {
+        shippingProgressMsg.innerHTML = '<i class="fa-solid fa-circle-check text-emerald"></i> <strong>FREE Express Shipping unlocked!</strong> (Cloudflare Edge routed)';
+      } else {
+        const remaining = (shippingThreshold - subtotal).toFixed(2);
+        shippingProgressMsg.innerHTML = `<i class="fa-solid fa-truck-fast"></i> Add <strong>$${remaining}</strong> more for <strong>FREE Express Shipping</strong>!`;
+      }
+    }
+
     if (countEl) countEl.textContent = count;
-    if (totalEl) totalEl.textContent = `$${total.toFixed(2)}`;
-    if (simPayAmount) simPayAmount.textContent = `$${total.toFixed(2)}`;
+    if (subtotalEl) subtotalEl.textContent = `$${subtotal.toFixed(2)}`;
+    if (totalEl) totalEl.textContent = `$${finalTotal.toFixed(2)}`;
+    if (simPayAmount) simPayAmount.textContent = `$${finalTotal.toFixed(2)}`;
   }
 
   window.KlutchDemo = {
-    addToCart: function (name, price) {
-      const existing = cartState.items.find((i) => i.name === name);
+    launchProductDemo: function (productId) {
+      const demoSection = document.getElementById('interactive-demo');
+      if (demoSection) {
+        demoSection.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      const existing = cartState.items.find((i) => i.id === productId);
+      if (!existing) {
+        const variant = selectedVariants[productId] || 'Cyber Cyan';
+        cartState.items.push({ id: productId, name: 'Klutch Velocity Pro Kit', price: 89, qty: 1, variant });
+        updateCartUI();
+      }
+
+      const targetCard = document.getElementById(`productCard-${productId}`);
+      if (targetCard) {
+        targetCard.classList.add('highlight-glow');
+        setTimeout(() => targetCard.classList.remove('highlight-glow'), 2200);
+      }
+
+      showDemoToast('Klutch Velocity Pro Kit active in your demo store cart! Try coupon KLUTCH20 or test card checkout below.');
+    },
+
+    addToCart: function (name, price, id) {
+      const variant = selectedVariants[id] || 'Standard';
+      const existing = cartState.items.find((i) => i.name === name && i.variant === variant);
       if (existing) {
         existing.qty += 1;
       } else {
-        cartState.items.push({ id: Date.now(), name, price, qty: 1 });
+        cartState.items.push({ id, name, price, qty: 1, variant });
       }
       updateCartUI();
 
-      // Trigger card highlight
       const cardGraphic = document.getElementById('cardGraphic');
       if (cardGraphic) {
         cardGraphic.classList.add('glow');
-        setTimeout(() => cardGraphic.classList.remove('glow'), 600);
+        setTimeout(() => cardGraphic.classList.remove('glow'), 500);
       }
+
+      showDemoToast(`Added ${name} (${variant}) to your cart!`);
+    },
+
+    updateQuantity: function (index, delta) {
+      if (!cartState.items[index]) return;
+      cartState.items[index].qty += delta;
+      if (cartState.items[index].qty <= 0) {
+        cartState.items.splice(index, 1);
+      }
+      updateCartUI();
+    },
+
+    removeItem: function (index) {
+      if (!cartState.items[index]) return;
+      const removed = cartState.items.splice(index, 1);
+      updateCartUI();
+      if (removed[0]) showDemoToast(`Removed ${removed[0].name} from cart`);
     },
 
     clearCart: function () {
       cartState.items = [];
       updateCartUI();
+      showDemoToast('Demo shopping cart cleared.');
+    },
+
+    updateVariant: function (id, val) {
+      selectedVariants[id] = val;
+    },
+
+    filterCategory: function (cat, btnEl) {
+      const items = document.querySelectorAll('.demo-product-item');
+      items.forEach((item) => {
+        if (cat === 'all' || item.getAttribute('data-category') === cat) {
+          item.style.display = 'flex';
+        } else {
+          item.style.display = 'none';
+        }
+      });
+
+      document.querySelectorAll('.cat-tab-btn').forEach((b) => b.classList.remove('active'));
+      if (btnEl) btnEl.classList.add('active');
+    },
+
+    applyCoupon: function () {
+      const input = document.getElementById('couponCodeInput');
+      const code = (input?.value || '').trim().toUpperCase();
+      if (code === 'KLUTCH20') {
+        cartState.discountPercent = 20;
+        cartState.appliedCoupon = 'KLUTCH20';
+        updateCartUI();
+        showDemoToast('Promo KLUTCH20 applied: 20% discount added!');
+      } else if (code) {
+        showDemoToast(`Code "${code}" is invalid. Try "KLUTCH20"!`);
+      }
+    },
+
+    autoApplyCoupon: function (code) {
+      const input = document.getElementById('couponCodeInput');
+      if (input) input.value = code;
+      cartState.discountPercent = 20;
+      cartState.appliedCoupon = code;
+      updateCartUI();
+      showDemoToast(`Promo ${code} applied: 20% off total!`);
+    },
+
+    switchPayMethod: function (method) {
+      cartState.payMethod = method;
+      document.querySelectorAll('.pay-tab-btn').forEach((btn) => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(method === 'card' ? 'payTabCC' : method === 'apple' ? 'payTabApple' : 'payTabGoogle');
+      if (activeBtn) activeBtn.classList.add('active');
+
+      const cardGraphic = document.getElementById('cardGraphic');
+      const payBtn = document.getElementById('simPayBtn');
+      const totalText = document.getElementById('cartTotalDisplay')?.textContent || '$89.00';
+
+      if (method === 'card') {
+        if (cardGraphic) cardGraphic.style.display = 'block';
+        if (payBtn) payBtn.innerHTML = `<i class="fa-solid fa-lock"></i> Authorize Test Payment (${totalText})`;
+      } else if (method === 'apple') {
+        if (cardGraphic) cardGraphic.style.display = 'none';
+        if (payBtn) payBtn.innerHTML = `<i class="fa-brands fa-apple"></i> 1-Click Pay with Apple Pay (${totalText})`;
+      } else if (method === 'google') {
+        if (cardGraphic) cardGraphic.style.display = 'none';
+        if (payBtn) payBtn.innerHTML = `<i class="fa-brands fa-google-pay"></i> 1-Click Pay with Google Pay (${totalText})`;
+      }
+    },
+
+    autofillTestCard: function () {
+      const cardNum = document.getElementById('simCardNum');
+      const cardExp = document.getElementById('simCardExp');
+      const cardCvc = document.getElementById('simCardCvc');
+      const cardName = document.getElementById('simCardName');
+
+      if (cardNum) {
+        cardNum.value = '4242 4242 4242 4242';
+        cardNum.dispatchEvent(new Event('input'));
+      }
+      if (cardExp) {
+        cardExp.value = '12/28';
+        cardExp.dispatchEvent(new Event('input'));
+      }
+      if (cardCvc) {
+        cardCvc.value = '888';
+      }
+      if (cardName) {
+        cardName.value = 'Alex Morgan';
+        cardName.dispatchEvent(new Event('input'));
+      }
+
+      showDemoToast('Autofilled Test Visa (4242) credentials!');
     },
 
     handleSimulatePay: function (event) {
       event.preventDefault();
       const feedback = document.getElementById('simFeedback');
       const cardNumInput = document.getElementById('simCardNum');
-      const cardNameInput = document.getElementById('simCardName');
       const payBtn = document.getElementById('simPayBtn');
 
       if (!feedback) return;
-
-      const numVal = (cardNumInput?.value || '').replace(/\s+/g, '');
-      if (numVal.length < 13) {
-        feedback.className = 'sim-feedback-msg error';
-        feedback.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please enter a valid card number (15-16 digits) for this live preview test.';
-        feedback.style.display = 'block';
-        return;
-      }
 
       const total = cartState.items.reduce((sum, item) => sum + item.price * item.qty, 0);
       if (total <= 0) {
@@ -142,25 +324,99 @@
         return;
       }
 
-      // Processing state
+      if (cartState.payMethod === 'card') {
+        const numVal = (cardNumInput?.value || '').replace(/\s+/g, '');
+        if (numVal.length < 13) {
+          feedback.className = 'sim-feedback-msg error';
+          feedback.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> Please click "1-Click Autofill Test Visa" or enter a 16-digit card.';
+          feedback.style.display = 'block';
+          return;
+        }
+      }
+
       const originalText = payBtn.innerHTML;
       payBtn.disabled = true;
-      payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Encrypting &amp; Authorizing with Gateway...';
+      payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Encrypting with 256-bit SSL...';
       feedback.style.display = 'none';
 
       setTimeout(() => {
-        payBtn.disabled = false;
-        payBtn.innerHTML = originalText;
+        payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Tokenizing PCI-DSS Handshake...';
+        setTimeout(() => {
+          payBtn.disabled = false;
+          payBtn.innerHTML = originalText;
 
-        const authCode = Math.floor(100000 + Math.random() * 900000);
-        feedback.className = 'sim-feedback-msg success';
-        feedback.innerHTML = `
-          <strong><i class="fa-solid fa-circle-check"></i> Test Payment Authorized!</strong><br />
-          Transaction ID: <code>KP-AUTH-${authCode}</code> &bull; Amount: <strong>$${total.toFixed(2)}</strong><br />
-          Seamless 1-click tokenized checkout handled via PCI-compliant pipeline.
-        `;
-        feedback.style.display = 'block';
-      }, 1200);
+          const authCode = Math.floor(100000 + Math.random() * 900000);
+          const orderNum = Math.floor(10000 + Math.random() * 90000);
+          const methodLabel = cartState.payMethod === 'card' ? 'Visa •••• 4242' : cartState.payMethod === 'apple' ? 'Apple Pay Token' : 'Google Pay Token';
+          const finalPaid = document.getElementById('cartTotalDisplay')?.textContent || `$${total.toFixed(2)}`;
+
+          feedback.className = 'sim-feedback-msg success';
+          feedback.innerHTML = `
+            <div class="receipt-header">
+              <i class="fa-solid fa-circle-check text-emerald"></i>
+              <h4>Order Confirmed &bull; #KP-${orderNum}</h4>
+            </div>
+            <div class="receipt-meta">
+              <span>Payment Method: <strong>${methodLabel}</strong></span>
+              <span>Gateway Auth ID: <code>KP-AUTH-${authCode}</code></span>
+              <span>Total Paid: <strong>${finalPaid}</strong></span>
+              <span>Routing: <strong>Cloudflare Global Edge</strong></span>
+            </div>
+            <p class="receipt-note">Demonstrating frictionless 1-click tokenized checkout built by Klutchplay.com.</p>
+            <button type="button" class="btn-sm btn-secondary" onclick="window.KlutchDemo.resetDemo()">Reset Demo Store</button>
+          `;
+          feedback.style.display = 'block';
+          feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 700);
+      }, 600);
+    },
+
+    resetDemo: function () {
+      cartState.items = [
+        { id: 'velocity-pro', name: 'Klutch Velocity Pro Kit', price: 89, qty: 1, variant: 'Cyber Cyan' }
+      ];
+      cartState.discountPercent = 0;
+      cartState.appliedCoupon = null;
+      const feedback = document.getElementById('simFeedback');
+      if (feedback) feedback.style.display = 'none';
+      const couponInput = document.getElementById('couponCodeInput');
+      if (couponInput) couponInput.value = '';
+      this.switchPayMethod('card');
+      this.autofillTestCard();
+      updateCartUI();
+      showDemoToast('Demo store & checkout reset to default.');
+    },
+
+    handleStoreChatPrompt: function (type) {
+      const chatBody = document.querySelector('.embedded-chat-body');
+      if (!chatBody) return;
+
+      let userMsg = '';
+      let botMsg = '';
+
+      if (type === 'coupon') {
+        userMsg = 'Do you have a coupon?';
+        botMsg = 'Yes! Use promo code <strong>KLUTCH20</strong> for 20% off your entire order today! <button type="button" class="btn-chat-apply-code" onclick="window.KlutchDemo.autoApplyCoupon(\'KLUTCH20\')">Click to Apply KLUTCH20</button>';
+      } else if (type === 'velocity') {
+        userMsg = 'Tell me about the Velocity Pro Kit';
+        botMsg = 'The <strong>Klutch Velocity Pro Kit ($89.00)</strong> is our top-rated tournament rig engineered with sub-1ms response and aircraft-grade aluminum casing.';
+      } else if (type === 'shipping') {
+        userMsg = 'How fast is Cloudflare shipping?';
+        botMsg = 'Orders route through our global edge fulfillment network for instant dispatch within 24 hours!';
+      }
+
+      const userRow = document.createElement('div');
+      userRow.className = 'embedded-chat-msg user';
+      userRow.innerHTML = `<span>${userMsg}</span>`;
+      chatBody.appendChild(userRow);
+
+      setTimeout(() => {
+        const botRow = document.createElement('div');
+        botRow.className = 'embedded-chat-msg bot';
+        botRow.innerHTML = `<i class="fa-solid fa-sparkles text-cyan"></i> <span>${botMsg}</span>`;
+        chatBody.appendChild(botRow);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }, 350);
     }
   };
 

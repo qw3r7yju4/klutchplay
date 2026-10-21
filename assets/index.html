@@ -271,7 +271,7 @@
                       <span class="curr-price">$89.00</span>
                       <span class="old-price">$129.00</span>
                     </div>
-                    <button class="mock-add-btn" onclick="document.getElementById('interactive-demo').scrollIntoView({behavior: 'smooth'})">
+                    <button class="mock-add-btn" id="heroStoreDemoBtn" onclick="window.KlutchDemo.launchProductDemo('velocity-pro')">
                       <i class="fa-solid fa-cart-plus"></i> Test in Interactive Demo
                     </button>
                   </div>
@@ -414,178 +414,332 @@
 
         <div class="demo-showcase-grid">
           <!-- Interactive E-Commerce & Checkout Simulator -->
-          <div class="glass-card demo-card">
+          <div class="glass-card demo-card store-showcase-card">
+            <div class="demo-store-topbar">
+              <div class="store-topbar-left">
+                <span class="browser-dot-mini red"></span>
+                <span class="browser-dot-mini yellow"></span>
+                <span class="browser-dot-mini green"></span>
+                <span class="store-url"><i class="fa-solid fa-lock text-emerald"></i> store.klutchplay.com</span>
+              </div>
+              <div class="store-topbar-right">
+                <span class="store-badge-live"><i class="fa-solid fa-bolt"></i> Cloudflare Edge 18ms</span>
+              </div>
+            </div>
+
             <div class="demo-card-header">
-              <div class="header-icon"><i class="fa-solid fa-cart-shopping"></i></div>
+              <div class="header-icon"><i class="fa-solid fa-shop"></i></div>
               <div>
-                <h3>Interactive Store &amp; Credit Card Simulator</h3>
-                <p>Add items, watch the cart update, and test the credit card validation flow.</p>
+                <h3>Interactive Storefront &amp; Live Cart</h3>
+                <p>Browse real products, select options, and test checkout in real-time.</p>
               </div>
             </div>
 
-            <div class="demo-store-items">
-              <div class="demo-item-card" data-id="1" data-name="Custom Storefront Theme" data-price="299">
-                <div class="item-visual"><i class="fa-solid fa-palette"></i></div>
-                <div class="item-info">
-                  <h4>Custom Storefront Theme</h4>
-                  <span class="item-price">$299.00</span>
-                </div>
-                <button class="btn-sm btn-item-add" onclick="window.KlutchDemo.addToCart('Custom Storefront Theme', 299)">
-                  <i class="fa-solid fa-plus"></i> Add
-                </button>
-              </div>
+            <!-- Toast alert for product additions -->
+            <div id="demoStoreToast" class="demo-store-toast" style="display: none;">
+              <i class="fa-solid fa-circle-check"></i>
+              <span id="demoStoreToastMsg">Added to cart!</span>
+            </div>
 
-              <div class="demo-item-card" data-id="2" data-name="Credit Card Payment Engine" data-price="199">
-                <div class="item-visual"><i class="fa-solid fa-credit-card"></i></div>
-                <div class="item-info">
-                  <h4>Credit Card Payment Engine</h4>
-                  <span class="item-price">$199.00</span>
-                </div>
-                <button class="btn-sm btn-item-add" onclick="window.KlutchDemo.addToCart('Credit Card Payment Engine', 199)">
-                  <i class="fa-solid fa-plus"></i> Add
-                </button>
+            <!-- Free Shipping Progress Indicator -->
+            <div class="shipping-progress-box">
+              <div class="shipping-progress-text">
+                <span id="shippingProgressMsg"><i class="fa-solid fa-truck-fast"></i> Add <strong id="shippingNeedAmount">$61.00</strong> more for <strong>FREE Express Shipping</strong>!</span>
+                <span id="shippingProgressPercent" class="shipping-percent">59%</span>
               </div>
-
-              <div class="demo-item-card" data-id="3" data-name="Cloudflare & GoDaddy Setup" data-price="149">
-                <div class="item-visual"><i class="fa-solid fa-cloud-bolt"></i></div>
-                <div class="item-info">
-                  <h4>Cloudflare &amp; GoDaddy Setup</h4>
-                  <span class="item-price">$149.00</span>
-                </div>
-                <button class="btn-sm btn-item-add" onclick="window.KlutchDemo.addToCart('Cloudflare & GoDaddy Setup', 149)">
-                  <i class="fa-solid fa-plus"></i> Add
-                </button>
+              <div class="shipping-progress-bar">
+                <div id="shippingProgressBarFill" class="shipping-progress-fill" style="width: 59%;"></div>
               </div>
             </div>
 
-            <!-- Live Cart Summary -->
-            <div class="demo-cart-box">
+            <!-- Category Tabs -->
+            <div class="store-category-tabs">
+              <button class="cat-tab-btn active" onclick="window.KlutchDemo.filterCategory('all', this)">All Gear</button>
+              <button class="cat-tab-btn" onclick="window.KlutchDemo.filterCategory('kits', this)">Pro Kits</button>
+              <button class="cat-tab-btn" onclick="window.KlutchDemo.filterCategory('hardware', this)">Hardware</button>
+              <button class="cat-tab-btn" onclick="window.KlutchDemo.filterCategory('accessories', this)">Accessories</button>
+            </div>
+
+            <!-- Product Grid -->
+            <div class="demo-product-grid" id="demoProductGrid">
+              <!-- Product 1: Klutch Velocity Pro Kit -->
+              <div class="demo-product-item" id="productCard-velocity-pro" data-category="kits">
+                <div class="prod-badge-tag"><i class="fa-solid fa-crown"></i> Flagship</div>
+                <div class="prod-icon-box cyan-gradient"><i class="fa-solid fa-bolt-lightning"></i></div>
+                <div class="prod-meta">
+                  <div class="prod-title-row">
+                    <h4>Klutch Velocity Pro Kit</h4>
+                    <span class="prod-rating"><i class="fa-solid fa-star"></i> 4.9 (128)</span>
+                  </div>
+                  <p class="prod-desc">All-in-one tournament rig with ultra-low latency &amp; rapid response.</p>
+                  <div class="prod-variant-row">
+                    <label>Edition:</label>
+                    <select id="variant-velocity-pro" onchange="window.KlutchDemo.updateVariant('velocity-pro', this.value)">
+                      <option value="Cyber Cyan">Cyber Cyan</option>
+                      <option value="Stealth Obsidian">Stealth Obsidian</option>
+                      <option value="Neon Violet">Neon Violet</option>
+                    </select>
+                  </div>
+                  <div class="prod-buy-row">
+                    <div class="prod-price-wrap">
+                      <span class="prod-price-now">$89.00</span>
+                      <span class="prod-price-was">$129.00</span>
+                    </div>
+                    <button class="btn-sm btn-item-add" onclick="window.KlutchDemo.addToCart('Klutch Velocity Pro Kit', 89, 'velocity-pro')">
+                      <i class="fa-solid fa-cart-plus"></i> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 2: Apex Carbon Keyset -->
+              <div class="demo-product-item" id="productCard-apex-keyset" data-category="hardware">
+                <div class="prod-badge-tag hot"><i class="fa-solid fa-fire"></i> Hot</div>
+                <div class="prod-icon-box purple-gradient"><i class="fa-solid fa-keyboard"></i></div>
+                <div class="prod-meta">
+                  <div class="prod-title-row">
+                    <h4>Apex Carbon Keyset</h4>
+                    <span class="prod-rating"><i class="fa-solid fa-star"></i> 4.8 (94)</span>
+                  </div>
+                  <p class="prod-desc">Custom CNC aluminum mechanical deck with swappable switches.</p>
+                  <div class="prod-variant-row">
+                    <label>Switches:</label>
+                    <select id="variant-apex-keyset" onchange="window.KlutchDemo.updateVariant('apex-keyset', this.value)">
+                      <option value="Linear Speed Red">Linear Speed Red</option>
+                      <option value="Tactile Quiet Brown">Tactile Quiet Brown</option>
+                    </select>
+                  </div>
+                  <div class="prod-buy-row">
+                    <div class="prod-price-wrap">
+                      <span class="prod-price-now">$145.00</span>
+                    </div>
+                    <button class="btn-sm btn-item-add" onclick="window.KlutchDemo.addToCart('Apex Carbon Keyset', 145, 'apex-keyset')">
+                      <i class="fa-solid fa-cart-plus"></i> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 3: HyperStream 4K Capture Hub -->
+              <div class="demo-product-item" id="productCard-capture-hub" data-category="hardware">
+                <div class="prod-badge-tag"><i class="fa-solid fa-video"></i> 4K 60FPS</div>
+                <div class="prod-icon-box amber-gradient"><i class="fa-solid fa-satellite-dish"></i></div>
+                <div class="prod-meta">
+                  <div class="prod-title-row">
+                    <h4>HyperStream 4K Hub</h4>
+                    <span class="prod-rating"><i class="fa-solid fa-star"></i> 5.0 (210)</span>
+                  </div>
+                  <p class="prod-desc">Zero-lag hardware passthrough for instant studio broadcasting.</p>
+                  <div class="prod-variant-row">
+                    <label>Interface:</label>
+                    <select id="variant-capture-hub" onchange="window.KlutchDemo.updateVariant('capture-hub', this.value)">
+                      <option value="USB-C 3.2 Gen 2">USB-C 3.2 Gen 2</option>
+                      <option value="PCIe Direct">PCIe Direct</option>
+                    </select>
+                  </div>
+                  <div class="prod-buy-row">
+                    <div class="prod-price-wrap">
+                      <span class="prod-price-now">$199.00</span>
+                    </div>
+                    <button class="btn-sm btn-item-add" onclick="window.KlutchDemo.addToCart('HyperStream 4K Hub', 199, 'capture-hub')">
+                      <i class="fa-solid fa-cart-plus"></i> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Product 4: Stealth RGB Desk Mat XL -->
+              <div class="demo-product-item" id="productCard-desk-mat" data-category="accessories">
+                <div class="prod-badge-tag"><i class="fa-solid fa-layer-group"></i> Pro Mat</div>
+                <div class="prod-icon-box emerald-gradient"><i class="fa-solid fa-gamepad"></i></div>
+                <div class="prod-meta">
+                  <div class="prod-title-row">
+                    <h4>Stealth Desk Mat XL</h4>
+                    <span class="prod-rating"><i class="fa-solid fa-star"></i> 4.9 (312)</span>
+                  </div>
+                  <p class="prod-desc">Precision micro-weave cloth with edge-stitched sync RGB.</p>
+                  <div class="prod-variant-row">
+                    <label>Size:</label>
+                    <select id="variant-desk-mat" onchange="window.KlutchDemo.updateVariant('desk-mat', this.value)">
+                      <option value="XL (900x400mm)">XL (900x400mm)</option>
+                      <option value="XXL Extended">XXL Extended</option>
+                    </select>
+                  </div>
+                  <div class="prod-buy-row">
+                    <div class="prod-price-wrap">
+                      <span class="prod-price-now">$45.00</span>
+                    </div>
+                    <button class="btn-sm btn-item-add" onclick="window.KlutchDemo.addToCart('Stealth Desk Mat XL', 45, 'desk-mat')">
+                      <i class="fa-solid fa-cart-plus"></i> Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Cart Summary Section inside Left Column -->
+            <div class="demo-cart-box" id="demoCartBox">
               <div class="cart-box-header">
-                <span><i class="fa-solid fa-bag-shopping"></i> Your Active Cart (<span id="cartCount">1</span> item)</span>
-                <button class="btn-text-clear" onclick="window.KlutchDemo.clearCart()">Clear</button>
+                <span><i class="fa-solid fa-bag-shopping"></i> Active Shopping Cart (<span id="cartCount">1</span> items)</span>
+                <button type="button" class="btn-text-clear" onclick="window.KlutchDemo.clearCart()">Empty Cart</button>
               </div>
+
+              <!-- Item rows with quantity controls -->
               <ul class="cart-item-list" id="cartItemList"></ul>
-              <div class="cart-totals">
-                <span>Total Due:</span>
-                <span class="cart-total-price" id="cartTotalDisplay">$299.00</span>
-              </div>
-            </div>
 
-            <!-- Interactive Credit Card Input Form -->
-            <div class="demo-payment-box">
-              <div class="payment-box-title">
-                <i class="fa-solid fa-credit-card"></i>
-                <span>Credit Card Checkout (Interactive Simulation)</span>
-              </div>
-
-              <div class="interactive-card-graphic" id="cardGraphic">
-                <div class="card-graphic-top">
-                  <div class="card-sim-chip"></div>
-                  <div class="card-brand-badge" id="cardBrandBadge">VISA</div>
+              <!-- Coupon code input bar -->
+              <div class="cart-coupon-bar">
+                <div class="coupon-input-wrap">
+                  <i class="fa-solid fa-tag"></i>
+                  <input type="text" id="couponCodeInput" placeholder="Promo code (e.g. KLUTCH20)..." autocomplete="off" />
+                  <button type="button" class="btn-apply-coupon" onclick="window.KlutchDemo.applyCoupon()">Apply</button>
                 </div>
-                <div class="card-sim-number" id="cardSimNumber">•••• •••• •••• ••••</div>
-                <div class="card-graphic-bottom">
-                  <div>
-                    <div class="graphic-label">CARD HOLDER</div>
-                    <div class="graphic-val" id="cardSimHolder">YOUR NAME</div>
-                  </div>
-                  <div>
-                    <div class="graphic-label">EXPIRES</div>
-                    <div class="graphic-val" id="cardSimExp">MM/YY</div>
-                  </div>
+                <div class="quick-coupon-hint">
+                  <span>Quick Test:</span>
+                  <button type="button" class="btn-coupon-pill" onclick="window.KlutchDemo.autoApplyCoupon('KLUTCH20')">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Apply KLUTCH20 (-20%)
+                  </button>
                 </div>
               </div>
 
-              <form id="simulatorForm" onsubmit="window.KlutchDemo.handleSimulatePay(event)">
-                <div class="form-group">
-                  <label for="simCardNum">Credit Card Number</label>
-                  <div class="input-icon-wrap">
-                    <i class="fa-solid fa-credit-card"></i>
-                    <input type="text" id="simCardNum" placeholder="4242 •••• •••• 4242" maxlength="19" autocomplete="off" />
-                  </div>
+              <!-- Pricing summary breakdown -->
+              <div class="cart-breakdown-table">
+                <div class="breakdown-row">
+                  <span>Subtotal:</span>
+                  <span id="cartSubtotalDisplay">$89.00</span>
                 </div>
-
-                <div class="form-row">
-                  <div class="form-group half">
-                    <label for="simCardExp">Expiration</label>
-                    <input type="text" id="simCardExp" placeholder="MM/YY" maxlength="5" />
-                  </div>
-                  <div class="form-group half">
-                    <label for="simCardCvc">CVC</label>
-                    <input type="text" id="simCardCvc" placeholder="123" maxlength="4" />
-                  </div>
+                <div class="breakdown-row discount-row" id="discountRow" style="display: none;">
+                  <span>Discount (KLUTCH20 -20%):</span>
+                  <span id="cartDiscountDisplay">-$17.80</span>
                 </div>
-
-                <div class="form-group">
-                  <label for="simCardName">Name on Card</label>
-                  <input type="text" id="simCardName" placeholder="Alex Morgan" />
+                <div class="breakdown-row">
+                  <span>Cloudflare Edge Delivery:</span>
+                  <span id="cartShippingDisplay" class="text-emerald">FREE</span>
                 </div>
-
-                <button type="submit" class="btn btn-primary btn-block" id="simPayBtn">
-                  <i class="fa-solid fa-lock"></i> Process Test Payment (<span id="simPayAmount">$299.00</span>)
-                </button>
-              </form>
-
-              <div id="simFeedback" class="sim-feedback-msg" style="display: none;"></div>
+                <div class="breakdown-row total-due-row">
+                  <span>Total Due:</span>
+                  <span class="cart-total-price" id="cartTotalDisplay">$89.00</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <!-- Feature Breakdown Card: Live Chat & Conversion -->
-          <div class="glass-card demo-card chat-showcase-panel">
+          <!-- Right Column: Interactive Payment Simulator & In-Store Live Chat -->
+          <div class="glass-card demo-card checkout-showcase-card">
+            <!-- Payment Engine Header -->
             <div class="demo-card-header">
-              <div class="header-icon"><i class="fa-solid fa-comments"></i></div>
+              <div class="header-icon"><i class="fa-solid fa-credit-card"></i></div>
               <div>
-                <h3>Live Chat Integration Feature</h3>
-                <p>See why visitors love immediate, responsive real-time chat.</p>
+                <h3>PCI-Compliant Payment Gateway</h3>
+                <p>Simulate tokenized checkout with live card rendering &amp; 1-click test fill.</p>
               </div>
             </div>
 
-            <div class="chat-benefits-list">
-              <div class="chat-benefit-row">
-                <div class="benefit-badge"><i class="fa-solid fa-stopwatch"></i></div>
-                <div>
-                  <h4>Zero Wait Times</h4>
-                  <p>Smart auto-responders greet visitors immediately, preventing site bounce and keeping buyers engaged.</p>
-                </div>
-              </div>
-
-              <div class="chat-benefit-row">
-                <div class="benefit-badge"><i class="fa-solid fa-user-check"></i></div>
-                <div>
-                  <h4>Higher Lead Conversion</h4>
-                  <p>Clients who interact with live chat are up to <strong>3x more likely</strong> to complete a purchase or book a call.</p>
-                </div>
-              </div>
-
-              <div class="chat-benefit-row">
-                <div class="benefit-badge"><i class="fa-solid fa-sliders"></i></div>
-                <div>
-                  <h4>Custom Styled to Your Brand</h4>
-                  <p>Every pixel matches your website palette, fonts, and tone of voice for a cohesive customer journey.</p>
-                </div>
-              </div>
-
-              <div class="chat-benefit-row">
-                <div class="benefit-badge"><i class="fa-solid fa-mobile"></i></div>
-                <div>
-                  <h4>Mobile &amp; Desktop Optimized</h4>
-                  <p>Unobtrusive floating bubble on mobile devices that expands seamlessly with smooth physics.</p>
-                </div>
-              </div>
-            </div>
-
-            <div class="chat-demo-callout-box">
-              <div class="callout-avatar-group">
-                <div class="mini-avatar"><i class="fa-solid fa-headset"></i></div>
-                <div class="pulse-indicator"></div>
-              </div>
-              <div class="callout-text">
-                <strong>Try the live chat widget right now!</strong>
-                <p>Click the bubble in the bottom right corner of your screen to test sending messages and see how it works.</p>
-              </div>
-              <button class="btn btn-secondary btn-sm" onclick="window.KlutchChat.toggle()">
-                <i class="fa-solid fa-comment-dots"></i> Open Widget
+            <!-- Payment Method Selector Tabs -->
+            <div class="payment-method-tabs">
+              <button type="button" class="pay-tab-btn active" id="payTabCC" onclick="window.KlutchDemo.switchPayMethod('card')">
+                <i class="fa-solid fa-credit-card"></i> Credit Card
               </button>
+              <button type="button" class="pay-tab-btn" id="payTabApple" onclick="window.KlutchDemo.switchPayMethod('apple')">
+                <i class="fa-brands fa-apple"></i> Apple Pay
+              </button>
+              <button type="button" class="pay-tab-btn" id="payTabGoogle" onclick="window.KlutchDemo.switchPayMethod('google')">
+                <i class="fa-brands fa-google-pay"></i> Google Pay
+              </button>
+            </div>
+
+            <!-- Quick Autofill Test Pill -->
+            <div class="autofill-banner">
+              <span>Testing made fast:</span>
+              <button type="button" class="btn-autofill-test" onclick="window.KlutchDemo.autofillTestCard()">
+                <i class="fa-solid fa-bolt"></i> 1-Click Autofill Test Visa (4242)
+              </button>
+            </div>
+
+            <!-- Interactive Credit Card Graphic -->
+            <div class="interactive-card-graphic" id="cardGraphic">
+              <div class="card-graphic-top">
+                <div class="card-sim-chip"></div>
+                <div class="card-brand-badge" id="cardBrandBadge">VISA</div>
+              </div>
+              <div class="card-sim-number" id="cardSimNumber">•••• •••• •••• ••••</div>
+              <div class="card-graphic-bottom">
+                <div>
+                  <div class="graphic-label">CARD HOLDER</div>
+                  <div class="graphic-val" id="cardSimHolder">ALEX MORGAN</div>
+                </div>
+                <div>
+                  <div class="graphic-label">EXPIRES</div>
+                  <div class="graphic-val" id="cardSimExp">12/28</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Credit Card Form -->
+            <form id="simulatorForm" onsubmit="window.KlutchDemo.handleSimulatePay(event)">
+              <div class="form-group">
+                <label for="simCardNum">Card Number</label>
+                <div class="input-icon-wrap">
+                  <i class="fa-solid fa-credit-card"></i>
+                  <input type="text" id="simCardNum" placeholder="4242 •••• •••• 4242" maxlength="19" autocomplete="off" />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group half">
+                  <label for="simCardExp">Expiration</label>
+                  <input type="text" id="simCardExp" placeholder="MM/YY" maxlength="5" />
+                </div>
+                <div class="form-group half">
+                  <label for="simCardCvc">CVC</label>
+                  <input type="text" id="simCardCvc" placeholder="123" maxlength="4" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="simCardName">Cardholder Name</label>
+                <input type="text" id="simCardName" placeholder="Alex Morgan" />
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block btn-lg" id="simPayBtn">
+                <i class="fa-solid fa-lock"></i> Authorize Test Payment (<span id="simPayAmount">$89.00</span>)
+              </button>
+            </form>
+
+            <!-- Feedback / Receipt Box -->
+            <div id="simFeedback" class="sim-feedback-msg" style="display: none;"></div>
+
+            <!-- In-Store Live Chat Interactive Demo Card -->
+            <div class="demo-embedded-chat-box">
+              <div class="embedded-chat-header">
+                <div class="header-avatar-mini">
+                  <i class="fa-solid fa-bolt"></i>
+                  <span class="online-dot-mini"></span>
+                </div>
+                <div>
+                  <h4>In-Store Live Assistant</h4>
+                  <span>Instant shopper support &amp; conversion</span>
+                </div>
+              </div>
+
+              <div class="embedded-chat-body">
+                <div class="embedded-chat-msg bot">
+                  <i class="fa-solid fa-sparkles text-cyan"></i>
+                  <span>Hi! Need help choosing or want a discount? Click a question:</span>
+                </div>
+              </div>
+
+              <div class="embedded-chat-prompts">
+                <button type="button" class="chat-prompt-pill" onclick="window.KlutchDemo.handleStoreChatPrompt('coupon')">
+                  <i class="fa-solid fa-tag"></i> "Do you have a coupon?"
+                </button>
+                <button type="button" class="chat-prompt-pill" onclick="window.KlutchDemo.handleStoreChatPrompt('velocity')">
+                  <i class="fa-solid fa-crown"></i> "Tell me about the Velocity Pro Kit"
+                </button>
+                <button type="button" class="chat-prompt-pill" onclick="window.KlutchDemo.handleStoreChatPrompt('shipping')">
+                  <i class="fa-solid fa-truck"></i> "How fast is Cloudflare shipping?"
+                </button>
+              </div>
             </div>
           </div>
         </div>
