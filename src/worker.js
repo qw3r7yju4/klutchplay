@@ -15,14 +15,25 @@ export default {
       });
     }
 
-    // Health check
+    // Health check endpoint
     if (url.pathname === '/api/health') {
-      return new Response(JSON.stringify({ status: 'ok', service: 'klutchplay-worker' }), {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return new Response(
+        JSON.stringify({
+          status: 'ok',
+          service: 'klutchplay-worker',
+          hasEmailBinding: Boolean(env.EMAIL && typeof env.EMAIL.send === 'function'),
+          hasForwardEmailSecret: Boolean(env.FORWARD_TO_EMAIL),
+        }),
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Access-Control-Allow-Origin': '*',
+          },
+        }
+      );
     }
 
-    // Contact form / Quote inquiry API
+    // Contact / Quote Inquiry API
     if (url.pathname === '/api/contact' && request.method === 'POST') {
       try {
         let body;
@@ -34,52 +45,128 @@ export default {
           body = Object.fromEntries(formData.entries());
         }
 
-        const name = body.name || body.clientName || 'Anonymous';
-        const email = body.email || body.clientEmail || 'No email provided';
-        const projectType = body.projectType || 'General Inquiry';
-        const hostingPreference = body.hostingPreference || 'Not specified';
-        const details = body.details || body.projectDetails || 'No details provided';
+        const name = (body.name || body.clientName || '').trim();
+        const email = (body.email || body.clientEmail || '').trim();
+        const projectType = (body.projectType || 'General Web Design Inquiry').trim();
+        const hostingPreference = (body.hostingPreference || 'Not specified').trim();
+        const details = (body.details || body.projectDetails || 'No additional details provided.').trim();
+        const selectedFeatures = Array.isArray(body.selectedFeatures)
+          ? body.selectedFeatures.join(', ')
+          : (body.selectedFeatures || '').trim();
+        const estimatedTotal = (body.estimatedTotal || '').trim();
 
-        const subject = `[Klutchplay Quote Inquiry] ${projectType} from ${name}`;
-        const emailContent = [
-          `New Project Inquiry from Klutchplay.com`,
-          `-----------------------------------------`,
-          `Client Name: ${name}`,
-          `Client Email: ${email}`,
-          `Project Focus: ${projectType}`,
-          `Hosting & Domain Preference: ${hostingPreference}`,
-          ``,
-          `Project Details:`,
-          `${details}`,
-          `-----------------------------------------`,
-          `Sent via Klutchplay Cloudflare Worker backend`,
-        ].join('\n');
+        if (!name) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Please provide your name.' }),
+            { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+          );
+        }
 
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+          return new Response(
+            JSON.stringify({ success: false, error: 'Please provide a valid email address.' }),
+            { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+          );
+        }
+
+        // Validate server bindings & secret
         if (!env.EMAIL || typeof env.EMAIL.send !== 'function') {
-          throw new Error('Email service is not configured');
-        }
-        if (!env.FORWARD_TO_EMAIL) {
-          throw new Error('Forwarding address is not configured');
+          console.error('Missing env.EMAIL binding in Cloudflare Worker');
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Email service binding is not configured on this Worker.',
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+          );
         }
 
-        const sender = env.SENDER_EMAIL || 'website-quotes@klutchplay.com';
+        const recipient = (env.FORWARD_TO_EMAIL || '').trim();
+        if (!recipient || !emailRegex.test(recipient)) {
+          console.error('Missing or invalid FORWARD_TO_EMAIL secret on Worker');
+          return new Response(
+            JSON.stringify({
+              success: false,
+              error: 'Recipient forwarding address (FORWARD_TO_EMAIL) is not configured.',
+            }),
+            { status: 500, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } }
+          );
+        }
+
+        // Sanitize headers against CRLF injection
+        const cleanName = name.replace(/[\r\n]+/g, ' ');
+        const cleanEmail = email.replace(/[\r\n]+/g, '');
+        const cleanProjectType = projectType.replace(/[\r\n]+/g, ' ');
+        const cleanHosting = hostingPreference.replace(/[\r\n]+/g, ' ');
+        const subject = `[Klutchplay Quote Inquiry] ${cleanProjectType} from ${cleanName}`;
+
+        const sender = (env.SENDER_EMAIL || 'website-quotes@klutchplay.com').trim();
+        const senderDomain = sender.split('@')[1] || 'klutchplay.com';
+
+        // Compose readable plain-text email body
+        const emailContent = [
+          `=========================================`,
+          `  NEW PROJECT INQUIRY - KLUTCHPLAY.COM`,
+          `  "When you need the clutch play."`,
+          `=========================================`,
+          ``,
+          `CLIENT INFORMATION:`,
+          `  Name:  ${cleanName}`,
+          `  Email: ${cleanEmail}`,
+          ``,
+          `PROJECT SCOPE:`,
+          `  Focus:   ${cleanProjectType}`,
+          `  Hosting: ${cleanHosting}`,
+          selectedFeatures ? `  Deliverables Selected: ${selectedFeatures}` : null,
+          estimatedTotal ? `  Project Estimator Total: $${estimatedTotal} USD` : null,
+          ``,
+          `PROJECT DETAILS & TIMELINE:`,
+          details,
+          ``,
+          `-----------------------------------------`,
+          `Sent automatically from Klutchplay.com inquiry system.`,
+          `Reply directly to this email to contact ${cleanName} (${cleanEmail}).`,
+        ]
+          .filter(Boolean)
+          .join('\n');
+
+        // Build fully compliant RFC 5322 MIME message
+        const messageId = `<${crypto.randomUUID()}@${senderDomain}>`;
+        const dateHeader = new Date().toUTCString();
+
         const rawMessage = [
           `From: "Klutchplay Quotes" <${sender}>`,
-          `To: <${env.FORWARD_TO_EMAIL}>`,
-          `Reply-To: <${email}>`,
+          `To: <${recipient}>`,
+          `Reply-To: "${cleanName}" <${cleanEmail}>`,
           `Subject: ${subject}`,
+          `Message-ID: ${messageId}`,
+          `Date: ${dateHeader}`,
+          `MIME-Version: 1.0`,
           `Content-Type: text/plain; charset=utf-8`,
+          `Content-Transfer-Encoding: 8bit`,
           ``,
           emailContent,
         ].join('\r\n');
 
-        const message = new EmailMessage(sender, env.FORWARD_TO_EMAIL, rawMessage);
-        await env.EMAIL.send(message);
+        try {
+          const message = new EmailMessage(sender, recipient, rawMessage);
+          await env.EMAIL.send(message);
+        } catch (sendErr) {
+          console.warn('EmailMessage MIME send failed, attempting structured builder fallback:', sendErr);
+          await env.EMAIL.send({
+            from: sender,
+            to: recipient,
+            replyTo: cleanEmail,
+            subject: subject,
+            text: emailContent,
+          });
+        }
 
         return new Response(
           JSON.stringify({
             success: true,
-            message: 'Inquiry received successfully! We will get back to you shortly.',
+            message: 'Inquiry received successfully! I will review your project and get back to you shortly.',
           }),
           {
             status: 200,
@@ -90,9 +177,12 @@ export default {
           }
         );
       } catch (err) {
-        console.error('API Error:', err);
+        console.error('API Error in /api/contact:', err);
         return new Response(
-          JSON.stringify({ success: false, error: err.message || 'Internal Server Error' }),
+          JSON.stringify({
+            success: false,
+            error: err.message || 'An unexpected error occurred while transmitting your inquiry.',
+          }),
           {
             status: 500,
             headers: {

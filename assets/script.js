@@ -660,16 +660,23 @@
       const submitBtn = document.getElementById('submitFormBtn');
       const successBox = document.getElementById('contactFormSuccess');
       const errorBox = document.getElementById('contactFormError');
+      const errorMsgEl = document.getElementById('contactFormErrorMsg');
 
       if (!form || !submitBtn) return;
       if (successBox) successBox.style.display = 'none';
       if (errorBox) errorBox.style.display = 'none';
 
-      const clientName = document.getElementById('clientName')?.value || '';
-      const clientEmail = document.getElementById('clientEmail')?.value || '';
+      const clientName = (document.getElementById('clientName')?.value || '').trim();
+      const clientEmail = (document.getElementById('clientEmail')?.value || '').trim();
       const projectType = document.getElementById('projectType')?.value || '';
       const hostingPreference = document.getElementById('hostingPreference')?.value || '';
-      const projectDetails = document.getElementById('projectDetails')?.value || '';
+      const projectDetails = (document.getElementById('projectDetails')?.value || '').trim();
+
+      // Gather current estimator context if available
+      const selectedFeatures = optionCheckboxes
+        .filter((o) => document.getElementById(o.id)?.checked)
+        .map((o) => o.name);
+      const estimatedTotal = (document.getElementById('estimatorTotal')?.textContent || '').trim();
 
       const originalText = submitBtn.innerHTML;
       submitBtn.disabled = true;
@@ -680,21 +687,30 @@
         clientEmail,
         projectType,
         hostingPreference,
-        projectDetails
+        projectDetails,
+        selectedFeatures,
+        estimatedTotal,
       };
 
       try {
         const response = await fetch('/api/contact', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
           },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
         });
 
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}`);
+        let data = null;
+        try {
+          data = await response.json();
+        } catch (_) {}
+
+        if (!response.ok || !data?.success) {
+          const errMsg = data?.error || `Server returned HTTP ${response.status}`;
+          throw new Error(errMsg);
         }
+
         form.reset();
         if (successBox) {
           successBox.style.display = 'block';
@@ -703,6 +719,9 @@
       } catch (err) {
         console.error('Unable to send contact inquiry:', err);
         if (errorBox) {
+          if (errorMsgEl) {
+            errorMsgEl.textContent = err.message || 'There was a problem sending your inquiry. Please try again shortly.';
+          }
           errorBox.style.display = 'block';
           errorBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
@@ -710,7 +729,7 @@
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalText;
       }
-    }
+    },
   };
 
   // Initial runs

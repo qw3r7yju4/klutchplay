@@ -1,0 +1,7 @@
+# Local development secrets for `npx wrangler dev`
+# Copy this file to `.dev.vars` (which is git-ignored) to test locally:
+#
+# Production secret is configured via:
+#   npx wrangler secret put FORWARD_TO_EMAIL
+#
+FORWARD_TO_EMAIL=klucinaken@gmail.com

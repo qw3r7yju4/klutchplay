@@ -1107,17 +1107,17 @@
               <div class="form-row">
                 <div class="form-group half">
                   <label for="clientName">Your Name *</label>
-                  <input type="text" id="clientName" required placeholder="Alex Rivera" />
+                  <input type="text" id="clientName" name="clientName" required placeholder="Alex Rivera" />
                 </div>
                 <div class="form-group half">
                   <label for="clientEmail">Email Address *</label>
-                  <input type="email" id="clientEmail" required placeholder="alex@company.com" />
+                  <input type="email" id="clientEmail" name="clientEmail" required placeholder="alex@company.com" />
                 </div>
               </div>
 
               <div class="form-group">
                 <label for="projectType">Main Focus</label>
-                <select id="projectType">
+                <select id="projectType" name="projectType">
                   <option value="Online Store & Credit Cards">Online Store + Credit Card Payments</option>
                   <option value="Full Website + Store + Live Chat">Complete Website + Store + Live Chat</option>
                   <option value="Live Chat & Payment Gateway Integration">Live Chat &amp; Payment Gateway Only</option>
@@ -1128,7 +1128,7 @@
 
               <div class="form-group">
                 <label for="hostingPreference">Hosting &amp; Domain Preference</label>
-                <select id="hostingPreference">
+                <select id="hostingPreference" name="hostingPreference">
                   <option value="Cloudflare Hosting + GoDaddy Domain (Preferred)">Cloudflare Hosting + GoDaddy Domain (Preferred)</option>
                   <option value="Cloudflare Hosting + Existing Domain">Cloudflare Hosting + My Existing Domain</option>
                   <option value="My Own Hosting Provider (AWS, Vercel, etc.)">My Own Hosting Provider (AWS, Vercel, Netlify, etc.)</option>
@@ -1138,7 +1138,7 @@
 
               <div class="form-group">
                 <label for="projectDetails">Project Details &amp; Timeline</label>
-                <textarea id="projectDetails" rows="4" placeholder="Tell me about your business, target audience, and any specific requirements..."></textarea>
+                <textarea id="projectDetails" name="projectDetails" rows="4" placeholder="Tell me about your business, target audience, and any specific requirements..."></textarea>
               </div>
 
               <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitFormBtn">
@@ -1154,7 +1154,7 @@
             <div id="contactFormError" class="form-error-box" style="display: none;" role="alert">
               <i class="fa-solid fa-circle-exclamation"></i>
               <h4>Inquiry Not Sent</h4>
-              <p>There was a problem sending your inquiry. Please try again shortly.</p>
+              <p id="contactFormErrorMsg">There was a problem sending your inquiry. Please try again shortly.</p>
             </div>
           </div>
         </div>
