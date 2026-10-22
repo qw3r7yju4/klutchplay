@@ -3,7 +3,7 @@
   "name": "klutchplay",
   "main": "src/worker.js",
   "compatibility_date": "2026-10-21",
-  "observability": { "enabled": true },
+  
 
   // Static files in ./assets/ are served automatically.
   // The Worker only runs for /api/* paths.
