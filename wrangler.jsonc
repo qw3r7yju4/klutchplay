@@ -20,5 +20,12 @@
   "vars": {
     "SENDER_EMAIL": "website-quotes@klutchplay.com",
     "PUBLIC_SITE_URL": "https://www.klutchplay.com"
-  }
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true,
+      "persist": true
+    }
+  },
 }
