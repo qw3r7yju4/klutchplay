@@ -63,7 +63,7 @@
 
   const cartState = {
     items: [
-      { id: 'velocity-pro', name: 'Klutch Velocity Pro Kit', price: 89, qty: 1, variant: 'Cyber Cyan' }
+      { id: 'velocity-pro', name: 'Klutch Velocity Pro Kit', price: 29.67, qty: 1, variant: 'Cyber Cyan' }
     ],
     discountPercent: 0,
     appliedCoupon: null,
@@ -137,7 +137,7 @@
 
     const finalTotal = Math.max(0, subtotal - discountAmount);
 
-    const shippingThreshold = 150;
+    const shippingThreshold = 50;
     const progressPercent = Math.min(100, Math.round((subtotal / shippingThreshold) * 100));
     if (shippingProgressFill) shippingProgressFill.style.width = `${progressPercent}%`;
     if (shippingProgressPercent) shippingProgressPercent.textContent = `${progressPercent}%`;
@@ -167,7 +167,7 @@
       const existing = cartState.items.find((i) => i.id === productId);
       if (!existing) {
         const variant = selectedVariants[productId] || 'Cyber Cyan';
-        cartState.items.push({ id: productId, name: 'Klutch Velocity Pro Kit', price: 89, qty: 1, variant });
+        cartState.items.push({ id: productId, name: 'Klutch Velocity Pro Kit', price: 29.67, qty: 1, variant });
         updateCartUI();
       }
 
@@ -269,7 +269,7 @@
 
       const cardGraphic = document.getElementById('cardGraphic');
       const payBtn = document.getElementById('simPayBtn');
-      const totalText = document.getElementById('cartTotalDisplay')?.textContent || '$89.00';
+      const totalText = document.getElementById('cartTotalDisplay')?.textContent || '$29.67';
 
       if (method === 'card') {
         if (cardGraphic) cardGraphic.style.display = 'block';
@@ -373,7 +373,7 @@
 
     resetDemo: function () {
       cartState.items = [
-        { id: 'velocity-pro', name: 'Klutch Velocity Pro Kit', price: 89, qty: 1, variant: 'Cyber Cyan' }
+        { id: 'velocity-pro', name: 'Klutch Velocity Pro Kit', price: 29.67, qty: 1, variant: 'Cyber Cyan' }
       ];
       cartState.discountPercent = 0;
       cartState.appliedCoupon = null;
@@ -399,7 +399,7 @@
         botMsg = 'Yes! Use promo code <strong>KLUTCH20</strong> for 20% off your entire order today! <button type="button" class="btn-chat-apply-code" onclick="window.KlutchDemo.autoApplyCoupon(\'KLUTCH20\')">Click to Apply KLUTCH20</button>';
       } else if (type === 'velocity') {
         userMsg = 'Tell me about the Velocity Pro Kit';
-        botMsg = 'The <strong>Klutch Velocity Pro Kit ($89.00)</strong> is our top-rated tournament rig engineered with sub-1ms response and aircraft-grade aluminum casing.';
+        botMsg = 'The <strong>Klutch Velocity Pro Kit ($29.67)</strong> is our top-rated tournament rig engineered with sub-1ms response and aircraft-grade aluminum casing.';
       } else if (type === 'shipping') {
         userMsg = 'How fast is Cloudflare shipping?';
         botMsg = 'Orders route through our global edge fulfillment network for instant dispatch within 24 hours!';
@@ -583,12 +583,12 @@
 
   // --- Interactive Project Estimator / Quote Builder ---
   const optionCheckboxes = [
-    { id: 'optDesign', name: 'Custom Website Design & UI/UX', price: 950 },
-    { id: 'optStore', name: 'E-Commerce Store Design', price: 750 },
-    { id: 'optPayments', name: 'Credit Card Payment Integration', price: 450 },
-    { id: 'optLiveChat', name: 'Live Chat Feature Setup', price: 300 },
-    { id: 'optCloudflare', name: 'Cloudflare Hosting & Edge Speed', price: 200 },
-    { id: 'optGoDaddy', name: 'GoDaddy Domain & DNS Setup', price: 150 }
+    { id: 'optDesign', name: 'Custom Website Design & UI/UX', price: 316.67 },
+    { id: 'optStore', name: 'E-Commerce Store Design', price: 250 },
+    { id: 'optPayments', name: 'Credit Card Payment Integration', price: 150 },
+    { id: 'optLiveChat', name: 'Live Chat Feature Setup', price: 100 },
+    { id: 'optCloudflare', name: 'Cloudflare Hosting & Edge Speed', price: 66.67 },
+    { id: 'optGoDaddy', name: 'GoDaddy Domain & DNS Setup', price: 50 }
   ];
 
   function updateEstimator() {
